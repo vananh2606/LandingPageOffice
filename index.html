@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  body{margin:0;background:#F5F4F0;}
+  * { box-sizing: border-box; }
+  ::-webkit-scrollbar{width:10px;height:10px;}
+  ::-webkit-scrollbar-thumb{background:#D8D5CC;border-radius:6px;}
+  a{color:#A8841D;}
+  a:hover{color:#8A6C16;}
+  textarea:focus, input:focus, select:focus{outline:2px solid #C9A227;outline-offset:1px;}
+</style>
+</helmet>
+<div style="{{ rootStyle }}">
+
+  <aside style="width:260px;flex:none;background:var(--navy);display:flex;flex-direction:column;height:100%;">
+    <div style="padding:26px 24px 22px;border-bottom:1px solid rgba(255,255,255,0.08);">
+      <div style="font-family:'Manrope',sans-serif;font-weight:800;font-size:19px;color:#fff;letter-spacing:0.2px;">TRÌNH KÝ</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.55);margin-top:4px;line-height:1.4;">Hệ thống quản lý hồ sơ<br/>trình ký nội bộ</div>
+    </div>
+    <nav style="padding:18px 14px;display:flex;flex-direction:column;gap:4px;">
+      <button style="{{ navDashboardStyle }}" onClick="{{ goDashboard }}">
+        <span style="width:18px;height:18px;border-radius:5px;border:2px solid currentColor;display:inline-block;flex:none;"></span>
+        Tổng quan &amp; Hồ sơ
+      </button>
+      <button style="{{ navCreateStyle }}" onClick="{{ goCreate }}">
+        <span style="width:18px;height:18px;border-radius:50%;border:2px solid currentColor;display:flex;align-items:center;justify-content:center;font-size:13px;flex:none;">+</span>
+        Tạo phiếu trình
+      </button>
+    </nav>
+    <div style="margin-top:auto;padding:18px 24px;border-top:1px solid rgba(255,255,255,0.08);">
+      <div style="font-size:11.5px;color:rgba(255,255,255,0.4);">Đăng nhập với</div>
+      <div style="font-size:13.5px;color:rgba(255,255,255,0.85);font-weight:600;margin-top:3px;">Phòng Đào tạo</div>
+    </div>
+  </aside>
+
+  <main style="flex:1;height:100%;overflow-y:auto;">
+
+    <sc-if value="{{ isDashboard }}" hint-placeholder-val="{{ true }}">
+    <div style="padding:36px 44px 60px;max-width:1280px;">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:24px;flex-wrap:wrap;">
+        <div>
+          <h1 style="font-family:'Manrope',sans-serif;font-weight:800;font-size:27px;color:var(--ink);margin:0 0 6px;">Hồ sơ trình ký</h1>
+          <div style="font-size:13.5px;color:var(--ink-soft);">Trang chủ / Hồ sơ trình ký</div>
+        </div>
+        <button style="background:var(--gold);color:#2B1F02;border:none;border-radius:8px;padding:12px 20px;font-family:'IBM Plex Sans',sans-serif;font-weight:700;font-size:14.5px;cursor:pointer;display:flex;align-items:center;gap:8px;box-shadow:0 2px 8px rgba(201,162,39,0.35);" onClick="{{ goCreate }}">+ Tạo phiếu trình</button>
+      </div>
+
+      <div style="display:flex;gap:14px;margin-top:28px;flex-wrap:wrap;">
+        <input type="text" placeholder="Tìm theo tên hoặc mã phiếu trình…" value="{{ search }}" onChange="{{ handleSearchChange }}" style="flex:1;min-width:240px;padding:11px 14px;border-radius:8px;border:1px solid var(--border);font-size:14px;font-family:'IBM Plex Sans',sans-serif;background:#fff;color:var(--ink);"/>
+        <select value="{{ filterType }}" onChange="{{ handleFilterTypeChange }}" style="padding:11px 14px;border-radius:8px;border:1px solid var(--border);font-size:14px;font-family:'IBM Plex Sans',sans-serif;background:#fff;color:var(--ink);min-width:210px;">
+          <option value="all">Tất cả loại hồ sơ</option>
+          <sc-for list="{{ typeOptions }}" as="t" hint-placeholder-count="8">
+            <option value="{{ t.value }}">{{ t.label }}</option>
+          </sc-for>
+        </select>
+        <select value="{{ filterStatus }}" onChange="{{ handleFilterStatusChange }}" style="padding:11px 14px;border-radius:8px;border:1px solid var(--border);font-size:14px;font-family:'IBM Plex Sans',sans-serif;background:#fff;color:var(--ink);min-width:190px;">
+          <option value="all">Tất cả trạng thái</option>
+          <option value="dang_xu_ly">Đang xử lý</option>
+          <option value="tra_lai">Trả lại chỉnh sửa</option>
+          <option value="hoan_tat">Hoàn tất</option>
+        </select>
+      </div>
+
+      <div style="margin-top:22px;background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+        <div style="display:grid;grid-template-columns:110px 2.1fr 1.1fr 1.1fr 1.4fr 1.1fr 32px;gap:12px;padding:13px 20px;background:#FAF9F6;border-bottom:1px solid var(--border);font-size:12px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:0.04em;">
+          <div>Mã phiếu</div><div>Tên phiếu trình</div><div>Loại hồ sơ</div><div>Người tạo</div><div>Tiến độ</div><div>Trạng thái</div><div></div>
+        </div>
+        <sc-for list="{{ filteredRecords }}" as="item" hint-placeholder-count="6">
+          <div style="display:grid;grid-template-columns:110px 2.1fr 1.1fr 1.1fr 1.4fr 1.1fr 32px;gap:12px;padding:16px 20px;border-bottom:1px solid var(--border);align-items:center;cursor:pointer;" onClick="{{ item.open }}" style-hover="background:#FAF9F6;">
+            <div style="font-family:'IBM Plex Sans',sans-serif;font-size:13px;color:var(--ink-soft);font-weight:600;">{{ item.code }}</div>
+            <div>
+              <div style="font-size:14.5px;color:var(--ink);font-weight:600;">{{ item.name }}</div>
+              <div style="font-size:12.5px;color:var(--ink-soft);margin-top:2px;">{{ item.createdAt }}</div>
+            </div>
+            <div style="font-size:13.5px;color:var(--ink-soft);">{{ item.typeLabel }}</div>
+            <div style="font-size:13.5px;color:var(--ink-soft);">{{ item.creator }}</div>
+            <div>
+              <div style="font-size:12.5px;color:var(--ink-soft);margin-bottom:5px;">Bước {{ item.currentStep }}/11 · {{ item.currentStepLabel }}</div>
+              <div style="height:6px;border-radius:3px;background:var(--bar-track);overflow:hidden;">
+                <div style="{{ item.progressBarStyle }}"></div>
+              </div>
+            </div>
+            <div><span style="{{ item.statusBadgeStyle }}">{{ item.statusLabel }}</span></div>
+            <div style="color:var(--ink-soft);font-size:16px;">›</div>
+          </div>
+        </sc-for>
+        <sc-if value="{{ noResults }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:48px 20px;text-align:center;color:var(--ink-soft);font-size:14px;">Không tìm thấy hồ sơ phù hợp.</div>
+        </sc-if>
+      </div>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ isCreate }}" hint-placeholder-val="{{ false }}">
+    <div style="padding:36px 44px 60px;max-width:920px;">
+      <h1 style="font-family:'Manrope',sans-serif;font-weight:800;font-size:27px;color:var(--ink);margin:0 0 6px;">Thêm mới phiếu trình</h1>
+      <div style="font-size:13.5px;color:var(--ink-soft);margin-bottom:28px;">Trang chủ / Hồ sơ trình ký / Tạo phiếu trình</div>
+
+      <div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:28px 30px;display:flex;flex-direction:column;gap:22px;">
+
+        <div>
+          <label style="display:block;font-size:13.5px;font-weight:700;color:var(--ink);margin-bottom:7px;">Chọn phiếu trình liên quan</label>
+          <select value="{{ createForm.relatedId }}" onChange="{{ handleRelatedChange }}" style="width:100%;padding:11px 14px;border-radius:8px;border:1px solid var(--border);font-size:14px;font-family:'IBM Plex Sans',sans-serif;background:#fff;color:var(--ink);">
+            <option value="">Không có phiếu trình liên quan</option>
+            <sc-for list="{{ relatedOptions }}" as="r" hint-placeholder-count="4">
+              <option value="{{ r.value }}">{{ r.label }}</option>
+            </sc-for>
+          </select>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+          <div>
+            <label style="display:block;font-size:13.5px;font-weight:700;color:var(--ink);margin-bottom:7px;">Chọn mảng <span style="color:#C4453B;">*</span></label>
+            <select value="{{ createForm.type }}" onChange="{{ handleTypeChange }}" style="width:100%;padding:11px 14px;border-radius:8px;border:1px solid var(--border);font-size:14px;font-family:'IBM Plex Sans',sans-serif;background:#fff;color:var(--ink);">
+              <option value="">— Chọn mảng —</option>
+              <sc-for list="{{ typeOptions }}" as="t" hint-placeholder-count="8">
+                <option value="{{ t.value }}">{{ t.label }}</option>
+              </sc-for>
+            </select>
+          </div>
+          <div>
+            <label style="display:block;font-size:13.5px;font-weight:700;color:var(--ink);margin-bottom:7px;">Chọn quy trình</label>
+            <input type="text" value="{{ quyTrinhLabel }}" disabled="{{ true }}" placeholder="Tự động theo mảng đã chọn" style="width:100%;padding:11px 14px;border-radius:8px;border:1px solid var(--border);font-size:14px;font-family:'IBM Plex Sans',sans-serif;background:#FAF9F6;color:var(--ink-soft);"/>
+          </div>
+        </div>
+
+        <sc-if value="{{ hasInstructions }}" hint-placeholder-val="{{ false }}">
+        <div style="background:#FBF6E8;border:1px solid #E9D9A0;border-radius:10px;padding:16px 18px;">
+          <div style="font-size:13px;font-weight:700;color:#8A6C16;margin-bottom:6px;">Thông tin hướng dẫn</div>
+          <div style="font-size:13.5px;color:#6B5A22;line-height:1.65;white-space:pre-line;">{{ instructionsText }}</div>
+        </div>
+        </sc-if>
+
+        <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:20px;">
+          <div>
+            <label style="display:block;font-size:13.5px;font-weight:700;color:var(--ink);margin-bottom:7px;">Tên phiếu trình <span style="color:#C4453B;">*</span></label>
+            <input type="text" value="{{ createForm.title }}" onChange="{{ handleTitleChange }}" placeholder="Ví dụ: Tổ chức Hội nghị bồi dưỡng giảng viên…" style="width:100%;padding:11px 14px;border-radius:8px;border:1px solid var(--border);font-size:14px;font-family:'IBM Plex Sans',sans-serif;background:#fff;color:var(--ink);"/>
+          </div>
+          <div>
+            <label style="display:block;font-size:13.5px;font-weight:700;color:var(--ink);margin-bottom:7px;">Mã phiếu trình</label>
+            <input type="text" value="Tự động sinh khi lưu" disabled="{{ true }}" style="width:100%;padding:11px 14px;border-radius:8px;border:1px solid var(--border);font-size:14px;font-family:'IBM Plex Sans',sans-serif;background:#FAF9F6;color:var(--ink-soft);"/>
+          </div>
+        </div>
+
+        <div>
+          <label style="display:block;font-size:13.5px;font-weight:700;color:var(--ink);margin-bottom:7px;">Nội dung <span style="color:#C4453B;">*</span></label>
+          <div style="border:1px solid var(--border);border-radius:8px;overflow:hidden;">
+            <div style="display:flex;gap:2px;padding:8px 10px;background:#FAF9F6;border-bottom:1px solid var(--border);">
+              <sc-for list="{{ toolbarIcons }}" as="ic" hint-placeholder-count="8">
+                <span style="width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--ink-soft);border-radius:4px;font-weight:700;">{{ ic }}</span>
+              </sc-for>
+            </div>
+            <textarea value="{{ createForm.content }}" onChange="{{ handleContentChange }}" rows="7" style="width:100%;border:none;padding:16px 18px;font-size:14px;font-family:'IBM Plex Sans',sans-serif;color:var(--ink);resize:vertical;line-height:1.7;"></textarea>
+          </div>
+        </div>
+
+        <div>
+          <label style="display:block;font-size:13.5px;font-weight:700;color:var(--ink);margin-bottom:7px;">Tệp đính kèm</label>
+          <div style="border:1.5px dashed var(--border);border-radius:10px;padding:26px;text-align:center;color:var(--ink-soft);font-size:13.5px;background:#FAF9F6;">Kéo thả tệp vào đây hoặc bấm để chọn — PDF, DOCX, XLSX (tối đa 20MB)</div>
+        </div>
+
+        <sc-if value="{{ createError }}" hint-placeholder-val="{{ false }}">
+          <div style="background:#FBEAE8;border:1px solid #E9B8B3;color:#A5342A;border-radius:8px;padding:11px 15px;font-size:13.5px;">{{ createError }}</div>
+        </sc-if>
+
+        <div style="display:flex;justify-content:flex-end;gap:12px;padding-top:6px;border-top:1px solid var(--border);margin-top:4px;padding-top:20px;">
+          <button style="background:transparent;border:1px solid var(--border);color:var(--ink-soft);border-radius:8px;padding:12px 20px;font-size:14.5px;font-weight:600;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;" onClick="{{ goDashboard }}">Hủy</button>
+          <button style="background:#fff;border:1.5px solid var(--gold);color:#8A6C16;border-radius:8px;padding:12px 20px;font-size:14.5px;font-weight:700;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;" onClick="{{ saveDraft }}">Lưu nháp</button>
+          <button style="background:var(--gold);border:none;color:#2B1F02;border-radius:8px;padding:12px 22px;font-size:14.5px;font-weight:700;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;box-shadow:0 2px 8px rgba(201,162,39,0.35);" onClick="{{ submitCreate }}">Trình ký →</button>
+        </div>
+      </div>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ isDetail }}" hint-placeholder-val="{{ false }}">
+    <div style="padding:36px 44px 60px;max-width:1000px;">
+      <button style="background:none;border:none;color:var(--ink-soft);font-size:13.5px;cursor:pointer;padding:0;margin-bottom:14px;font-family:'IBM Plex Sans',sans-serif;" onClick="{{ goDashboard }}">← Quay lại danh sách</button>
+
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap;">
+        <div>
+          <div style="font-size:13px;color:var(--ink-soft);font-weight:600;margin-bottom:6px;">{{ selectedRecord.code }} · {{ selectedRecord.typeLabel }}</div>
+          <h1 style="font-family:'Manrope',sans-serif;font-weight:800;font-size:24px;color:var(--ink);margin:0;max-width:640px;">{{ selectedRecord.name }}</h1>
+        </div>
+        <span style="{{ selectedRecord.statusBadgeStyle }}">{{ selectedRecord.statusLabel }}</span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:22px;">
+        <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px 16px;">
+          <div style="font-size:11.5px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:5px;">Người tạo</div>
+          <div style="font-size:14px;font-weight:600;color:var(--ink);">{{ selectedRecord.creator }}</div>
+        </div>
+        <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px 16px;">
+          <div style="font-size:11.5px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:5px;">Ngày tạo</div>
+          <div style="font-size:14px;font-weight:600;color:var(--ink);">{{ selectedRecord.createdAt }}</div>
+        </div>
+        <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px 16px;">
+          <div style="font-size:11.5px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:5px;">Quy trình</div>
+          <div style="font-size:14px;font-weight:600;color:var(--ink);">{{ selectedRecord.typeLabel }}</div>
+        </div>
+        <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px 16px;">
+          <div style="font-size:11.5px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:5px;">Tiến độ</div>
+          <div style="font-size:14px;font-weight:600;color:var(--ink);">Bước {{ selectedRecord.currentStep }}/11</div>
+        </div>
+      </div>
+
+      <h2 style="font-family:'Manrope',sans-serif;font-weight:800;font-size:16px;color:var(--ink);margin:32px 0 16px;">Luồng phê duyệt</h2>
+
+      <div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:8px 26px;">
+        <sc-for list="{{ selectedRecord.steps }}" as="step" hint-placeholder-count="11">
+          <div style="display:flex;gap:18px;padding:18px 0;border-bottom:1px solid var(--border);">
+            <div style="flex:none;display:flex;flex-direction:column;align-items:center;width:30px;">
+              <div style="{{ step.circleStyle }}">{{ step.circleContent }}</div>
+              <div style="{{ step.connectorStyle }}"></div>
+            </div>
+            <div style="flex:1;padding-bottom:2px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+                <div style="font-size:14.5px;font-weight:700;color:var(--ink);">{{ step.num }}. {{ step.label }}</div>
+                <span style="{{ step.statusBadgeStyle }}">{{ step.statusLabel }}</span>
+              </div>
+              <div style="font-size:13px;color:var(--ink-soft);margin-top:4px;">Trách nhiệm: {{ step.role }}</div>
+              <sc-if value="{{ step.note }}" hint-placeholder-val="{{ false }}">
+                <div style="font-size:12.5px;color:#8A6C16;background:#FBF6E8;border-radius:6px;padding:8px 11px;margin-top:8px;line-height:1.55;">{{ step.note }}</div>
+              </sc-if>
+
+              <sc-if value="{{ step.isActionable }}" hint-placeholder-val="{{ false }}">
+                <div style="margin-top:14px;background:#FAF9F6;border:1px solid var(--border);border-radius:8px;padding:14px 16px;">
+                  <textarea value="{{ actionComment }}" onChange="{{ handleActionCommentChange }}" placeholder="Ghi chú / ý kiến xử lý (không bắt buộc)…" rows="2" style="width:100%;border:1px solid var(--border);border-radius:6px;padding:9px 11px;font-size:13.5px;font-family:'IBM Plex Sans',sans-serif;color:var(--ink);resize:vertical;margin-bottom:10px;"></textarea>
+                  <div style="display:flex;gap:10px;">
+                    <button style="background:#1F8A5F;color:#fff;border:none;border-radius:7px;padding:10px 16px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;" onClick="{{ approveStep }}">Duyệt &amp; chuyển tiếp</button>
+                    <button style="background:#fff;color:#A5342A;border:1px solid #E9B8B3;border-radius:7px;padding:10px 16px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;" onClick="{{ rejectStep }}">Trả lại đơn vị</button>
+                  </div>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ step.isReturned }}" hint-placeholder-val="{{ false }}">
+                <div style="margin-top:14px;background:#FBEAE8;border:1px solid #E9B8B3;border-radius:8px;padding:14px 16px;">
+                  <div style="font-size:13px;color:#A5342A;margin-bottom:10px;">Hồ sơ đã bị trả lại tại bước này. Đơn vị cần chỉnh sửa và gửi lại.</div>
+                  <button style="background:#C9A227;color:#2B1F02;border:none;border-radius:7px;padding:10px 16px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;" onClick="{{ resendStep }}">Gửi lại sau chỉnh sửa</button>
+                </div>
+              </sc-if>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+
+      <sc-if value="{{ selectedRecord.isDone }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-top:20px;background:#E7F5EF;border:1px solid #B7DFCB;border-radius:10px;padding:16px 18px;font-size:14px;color:#1F8A5F;font-weight:600;">✓ Hồ sơ đã hoàn tất toàn bộ quy trình 11 bước.</div>
+      </sc-if>
+    </div>
+    </sc-if>
+
+  </main>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;defaultScreen&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;dashboard&quot;,&quot;options&quot;:[&quot;dashboard&quot;,&quot;create&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Hành vi&quot;},&quot;compactTable&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Hành vi&quot;},&quot;accentTheme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;navy-gold&quot;,&quot;options&quot;:[&quot;navy-gold&quot;,&quot;slate-teal&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Giao diện&quot;}}">
+const STEP_DEFS = [
+  {num:1, label:'Xây dựng nội dung hồ sơ', role:'Các Khoa, Phòng, Viện, Trung tâm', note:''},
+  {num:2, label:'Lãnh đạo đơn vị duyệt hồ sơ', role:'Lãnh đạo Khoa/Phòng/Viện/Trung tâm', note:''},
+  {num:3, label:'Đơn vị liên quan cho ý kiến, thông qua', role:'Kế toán, Phòng TC-PC', note:'Hồ sơ đầy đủ trình tiếp; còn thiếu hoặc sai thì chuyển về đơn vị trình làm lại.'},
+  {num:4, label:'Phó Hiệu trưởng phụ trách đơn vị duyệt', role:'Phó Hiệu trưởng phụ trách', note:'Duyệt sẽ chuyển về Văn phòng Trường; nếu không duyệt trả về đơn vị trình.'},
+  {num:5, label:'Kiểm soát hồ sơ, trình Hiệu trưởng phê duyệt', role:'Văn phòng Trường', note:'Hồ sơ chưa đạt trả lại đơn vị trình.'},
+  {num:6, label:'Hiệu trưởng duyệt hồ sơ', role:'Hiệu trưởng', note:''},
+  {num:7, label:'Tiếp nhận, chuyển hồ sơ qua Thư ký Chủ tịch HĐT', role:'Văn phòng Trường', note:''},
+  {num:8, label:'Kiểm soát hồ sơ, trình Chủ tịch HĐT', role:'Thư ký Chủ tịch HĐT', note:''},
+  {num:9, label:'Chủ tịch HĐT duyệt hồ sơ', role:'Chủ tịch HĐT', note:''},
+  {num:10, label:'Thư ký Chủ tịch nhận hồ sơ, giao lại Văn phòng', role:'Thư ký Chủ tịch HĐT', note:''},
+  {num:11, label:'Chuyển các đơn vị liên quan thực hiện, xử lý con dấu', role:'Văn phòng Trường', note:''},
+];
+
+const TYPE_OPTIONS = [
+  {value:'hanhchinh', label:'Văn bản hành chính'},
+  {value:'nhansu', label:'Nhân sự'},
+  {value:'daotao', label:'Đào tạo'},
+  {value:'truyenthong', label:'Truyền thông - Tuyển sinh'},
+  {value:'thanhtoan', label:'Thanh toán'},
+  {value:'muasam', label:'Mua sắm'},
+  {value:'hopdong', label:'Hợp đồng'},
+  {value:'khcn', label:'Khoa học công nghệ'},
+];
+
+const INSTRUCTIONS = {
+  hanhchinh: 'Đơn vị in 2 bản khi nộp hồ sơ giấy: (1) trả đơn vị lưu, (2) chuyển kiểm soát lưu.',
+  nhansu: 'Kèm hồ sơ nhân sự liên quan (lý lịch, quyết định cũ nếu có) khi trình ký.',
+  daotao: 'Đơn vị in 2 bản khi nộp hồ sơ giấy: (1) trả đơn vị lưu, (2) chuyển kiểm soát lưu.',
+  truyenthong: 'Kèm kế hoạch chi tiết và dự trù kinh phí (nếu có phát sinh).',
+  thanhtoan: 'Trường hợp có phát sinh kinh phí:\n- Có tạm ứng: tạo thêm phiếu trình, chọn "Tờ trình kèm đề nghị chi tiết".\n- Không có tạm ứng: tạo thêm phiếu trình, chọn "Tờ trình kinh phí không tạm ứng".',
+  muasam: 'Kèm báo giá hoặc biên bản đề xuất mua sắm/thanh lý tài sản.',
+  hopdong: 'Kèm dự thảo hợp đồng và ý kiến Phòng TC-PC trước khi trình ký.',
+  khcn: 'Kèm thuyết minh đề tài hoặc biên bản nghiệm thu liên quan.',
+};
+
+const TOOLBAR_ICONS = ['B','I','U','S','•','1.','¶','🖼'];
+
+function typeLabelOf(value){
+  const t = TYPE_OPTIONS.find(o => o.value === value);
+  return t ? t.label : value;
+}
+
+function statusMeta(status){
+  if (status === 'hoan_tat') return {label:'Hoàn tất', color:'#1F8A5F', bg:'#E7F5EF', border:'#B7DFCB'};
+  if (status === 'tra_lai') return {label:'Trả lại chỉnh sửa', color:'#A5342A', bg:'#FBEAE8', border:'#E9B8B3'};
+  return {label:'Đang xử lý', color:'#8A6C16', bg:'#FBF0DD', border:'#E9D9A0'};
+}
+
+function badgeStyle(meta){
+  return 'display:inline-block;font-size:12.5px;font-weight:700;padding:5px 11px;border-radius:20px;background:' + meta.bg + ';color:' + meta.color + ';border:1px solid ' + meta.border + ';white-space:nowrap;';
+}
+
+function seedRecords(){
+  return [
+    {id:'r1', code:'PT-2607-014', name:'Tổ chức Hội nghị bồi dưỡng giảng viên lý luận chính trị 2026', type:'daotao', creator:'Phòng Đào tạo', createdAt:'12/07/2026', currentStep:6, overallStatus:'dang_xu_ly'},
+    {id:'r2', code:'PT-2607-013', name:'Đề nghị chi tạm ứng tổ chức hội thảo khoa học công nghệ', type:'khcn', creator:'Phòng KHCN', createdAt:'11/07/2026', currentStep:3, overallStatus:'dang_xu_ly'},
+    {id:'r3', code:'PT-2607-012', name:'Quyết định bổ nhiệm Trưởng khoa Công nghệ thông tin', type:'nhansu', creator:'Phòng Tổ chức - Nhân sự', createdAt:'09/07/2026', currentStep:9, overallStatus:'dang_xu_ly'},
+    {id:'r4', code:'PT-2607-011', name:'Hợp đồng dịch vụ bảo trì hệ thống mạng nội bộ', type:'hopdong', creator:'Phòng Công nghệ thông tin', createdAt:'05/07/2026', currentStep:11, overallStatus:'hoan_tat'},
+    {id:'r5', code:'PT-2607-010', name:'Kế hoạch truyền thông tuyển sinh đợt 2 năm 2026', type:'truyenthong', creator:'Phòng Truyền thông', createdAt:'03/07/2026', currentStep:2, overallStatus:'tra_lai'},
+    {id:'r6', code:'PT-2607-009', name:'Thanh lý tài sản phòng thí nghiệm Hóa - Sinh', type:'muasam', creator:'Phòng Quản trị', createdAt:'01/07/2026', currentStep:5, overallStatus:'dang_xu_ly'},
+    {id:'r7', code:'PT-2607-008', name:'Thanh toán chi phí tổ chức sự kiện khai giảng', type:'thanhtoan', creator:'Phòng Tài chính - Kế toán', createdAt:'28/06/2026', currentStep:6, overallStatus:'dang_xu_ly'},
+  ];
+}
+
+class Component extends DCLogic {
+  state = {
+    screen: this.props.defaultScreen || 'dashboard',
+    records: seedRecords(),
+    selectedId: 'r1',
+    search: '',
+    filterType: 'all',
+    filterStatus: 'all',
+    createForm: {relatedId:'', type:'', title:'', content:'Căn cứ Công văn số … ngày … tháng … năm … của Bộ GDĐT về việc tổ chức Hội nghị bồi dưỡng, tập huấn chính trị cho giảng viên giảng dạy các môn Lý luận chính trị của đại học, học viện, trường đại học, trường cao đẳng sư phạm năm 20xx;\n\nTrường Đại học Nguyễn Tất Thành phối hợp Bộ GD&ĐT tổ chức Hội nghị bồi dưỡng giảng viên lý luận chính trị 20xx…'},
+    createError: '',
+    actionComment: '',
+  };
+
+  goDashboard = () => this.setState({screen:'dashboard'});
+  goCreate = () => this.setState({screen:'create', createForm:{relatedId:'', type:'', title:'', content:''}, createError:''});
+  goDetail = (id) => this.setState({screen:'detail', selectedId:id, actionComment:''});
+
+  handleSearchChange = (e) => this.setState({search:e.target.value});
+  handleFilterTypeChange = (e) => this.setState({filterType:e.target.value});
+  handleFilterStatusChange = (e) => this.setState({filterStatus:e.target.value});
+
+  handleRelatedChange = (e) => this.setState(s => ({createForm:{...s.createForm, relatedId:e.target.value}}));
+  handleTypeChange = (e) => this.setState(s => ({createForm:{...s.createForm, type:e.target.value}}));
+  handleTitleChange = (e) => this.setState(s => ({createForm:{...s.createForm, title:e.target.value}}));
+  handleContentChange = (e) => this.setState(s => ({createForm:{...s.createForm, content:e.target.value}}));
+  handleActionCommentChange = (e) => this.setState({actionComment:e.target.value});
+
+  saveDraft = () => this.setState({screen:'dashboard'});
+
+  submitCreate = () => {
+    const f = this.state.createForm;
+    if (!f.type || !f.title.trim() || !f.content.trim()) {
+      this.setState({createError:'Vui lòng chọn mảng, nhập tên phiếu trình và nội dung trước khi trình ký.'});
+      return;
+    }
+    const seq = this.state.records.length + 8;
+    const newRec = {
+      id: 'r' + Date.now(),
+      code: 'PT-2607-0' + seq,
+      name: f.title.trim(),
+      type: f.type,
+      creator: 'Phòng Đào tạo',
+      createdAt: '16/07/2026',
+      currentStep: 2,
+      overallStatus: 'dang_xu_ly',
+    };
+    this.setState(s => ({
+      records: [newRec, ...s.records],
+      screen: 'detail',
+      selectedId: newRec.id,
+      createError: '',
+    }));
+  };
+
+  approveStep = () => {
+    this.setState(s => ({
+      records: s.records.map(r => {
+        if (r.id !== s.selectedId) return r;
+        if (r.currentStep >= 11) return {...r, overallStatus:'hoan_tat'};
+        return {...r, currentStep:r.currentStep + 1, overallStatus:'dang_xu_ly'};
+      }),
+      actionComment: '',
+    }));
+  };
+
+  rejectStep = () => {
+    this.setState(s => ({
+      records: s.records.map(r => r.id === s.selectedId ? {...r, overallStatus:'tra_lai'} : r),
+      actionComment: '',
+    }));
+  };
+
+  resendStep = () => {
+    this.setState(s => ({
+      records: s.records.map(r => r.id === s.selectedId ? {...r, overallStatus:'dang_xu_ly'} : r),
+    }));
+  };
+
+  buildStepsForRecord(record) {
+    return STEP_DEFS.map(def => {
+      let status;
+      if (def.num < record.currentStep) status = 'hoan_tat';
+      else if (def.num === record.currentStep) status = (record.overallStatus === 'tra_lai') ? 'tra_lai' : (record.overallStatus === 'hoan_tat' ? 'hoan_tat' : 'dang_xu_ly');
+      else status = 'upcoming';
+
+      const isLast = def.num === 11;
+      const meta = status === 'upcoming'
+        ? {label:'Chưa đến lượt', color:'#8A8F9C', bg:'#F0EFEC', border:'#DEDCD5'}
+        : statusMeta(status);
+
+      let circleStyle, circleContent;
+      if (status === 'hoan_tat') {
+        circleStyle = 'width:30px;height:30px;border-radius:50%;background:#1F8A5F;color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex:none;';
+        circleContent = '✓';
+      } else if (status === 'tra_lai') {
+        circleStyle = 'width:30px;height:30px;border-radius:50%;background:#C4453B;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex:none;';
+        circleContent = '✕';
+      } else if (status === 'dang_xu_ly') {
+        circleStyle = 'width:30px;height:30px;border-radius:50%;background:#C9A227;color:#2B1F02;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex:none;';
+        circleContent = String(def.num);
+      } else {
+        circleStyle = 'width:30px;height:30px;border-radius:50%;background:#F0EFEC;color:#8A8F9C;border:1.5px solid #DEDCD5;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex:none;';
+        circleContent = String(def.num);
+      }
+
+      const connectorStyle = isLast ? 'display:none;' : ('width:2px;flex:1;min-height:14px;margin-top:4px;background:' + (def.num < record.currentStep ? '#1F8A5F' : '#E4E2DC') + ';');
+
+      return {
+        num: def.num,
+        label: def.label,
+        role: def.role,
+        note: def.note,
+        statusLabel: meta.label,
+        statusBadgeStyle: badgeStyle(meta),
+        circleStyle,
+        circleContent,
+        connectorStyle,
+        isActionable: def.num === record.currentStep && (record.overallStatus === 'dang_xu_ly'),
+        isReturned: def.num === record.currentStep && (record.overallStatus === 'tra_lai'),
+      };
+    });
+  }
+
+  renderVals() {
+    const s = this.state;
+    const accent = (this.props.accentTheme === 'slate-teal')
+      ? {navy:'#1E2B33', gold:'#2FA394', bar:'#DCE7E5'}
+      : {navy:'#16213E', gold:'#C9A227', bar:'#E6E3DA'};
+
+    const rootStyle = '--navy:' + accent.navy + ';--gold:' + accent.gold + ';--ink:#1A1D29;--ink-soft:#5B6178;--border:#E4E2DC;--bg:#F5F4F0;--bar-track:' + accent.bar + ';display:flex;height:100vh;width:100%;font-family:\'IBM Plex Sans\',sans-serif;background:var(--bg);';
+
+    const navBase = 'display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;border:none;background:transparent;font-size:14px;font-weight:600;cursor:pointer;font-family:\'IBM Plex Sans\',sans-serif;text-align:left;width:100%;';
+    const navActive = navBase + 'background:rgba(255,255,255,0.12);color:#fff;';
+    const navInactive = navBase + 'color:rgba(255,255,255,0.6);';
+
+    const compact = !!this.props.compactTable;
+
+    const records = s.records.map(r => {
+      const meta = statusMeta(r.overallStatus);
+      const pct = Math.round((r.currentStep / 11) * 100);
+      const barColor = r.overallStatus === 'hoan_tat' ? '#1F8A5F' : (r.overallStatus === 'tra_lai' ? '#C4453B' : accent.gold);
+      return {
+        ...r,
+        typeLabel: typeLabelOf(r.type),
+        statusLabel: meta.label,
+        statusBadgeStyle: badgeStyle(meta),
+        currentStepLabel: STEP_DEFS[Math.min(r.currentStep, 11) - 1].label,
+        progressBarStyle: 'height:100%;width:' + pct + '%;background:' + barColor + ';border-radius:3px;',
+        open: () => this.goDetail(r.id),
+      };
+    });
+
+    const q = s.search.trim().toLowerCase();
+    const filteredRecords = records.filter(r => {
+      if (s.filterType !== 'all' && r.type !== s.filterType) return false;
+      if (s.filterStatus !== 'all' && r.overallStatus !== s.filterStatus) return false;
+      if (q && !(r.name.toLowerCase().includes(q) || r.code.toLowerCase().includes(q))) return false;
+      return true;
+    });
+
+    const selected = s.records.find(r => r.id === s.selectedId) || s.records[0];
+    const selectedMeta = statusMeta(selected.overallStatus);
+    const selectedRecord = {
+      ...selected,
+      typeLabel: typeLabelOf(selected.type),
+      statusLabel: selectedMeta.label,
+      statusBadgeStyle: badgeStyle(selectedMeta),
+      steps: this.buildStepsForRecord(selected),
+      isDone: selected.overallStatus === 'hoan_tat',
+    };
+
+    const relatedOptions = s.records.slice(0, 5).map(r => ({value:r.id, label:r.code + ' — ' + r.name}));
+
+    return {
+      rootStyle,
+      isDashboard: s.screen === 'dashboard',
+      isCreate: s.screen === 'create',
+      isDetail: s.screen === 'detail',
+      navDashboardStyle: (s.screen === 'dashboard' || s.screen === 'detail') ? navActive : navInactive,
+      navCreateStyle: s.screen === 'create' ? navActive : navInactive,
+      goDashboard: this.goDashboard,
+      goCreate: this.goCreate,
+      typeOptions: TYPE_OPTIONS,
+      toolbarIcons: TOOLBAR_ICONS,
+      search: s.search,
+      filterType: s.filterType,
+      filterStatus: s.filterStatus,
+      handleSearchChange: this.handleSearchChange,
+      handleFilterTypeChange: this.handleFilterTypeChange,
+      handleFilterStatusChange: this.handleFilterStatusChange,
+      filteredRecords,
+      noResults: filteredRecords.length === 0,
+      createForm: s.createForm,
+      quyTrinhLabel: s.createForm.type ? typeLabelOf(s.createForm.type) : '',
+      hasInstructions: !!s.createForm.type,
+      instructionsText: s.createForm.type ? INSTRUCTIONS[s.createForm.type] : '',
+      relatedOptions,
+      handleRelatedChange: this.handleRelatedChange,
+      handleTypeChange: this.handleTypeChange,
+      handleTitleChange: this.handleTitleChange,
+      handleContentChange: this.handleContentChange,
+      createError: s.createError,
+      saveDraft: this.saveDraft,
+      submitCreate: this.submitCreate,
+      selectedRecord,
+      actionComment: s.actionComment,
+      handleActionCommentChange: this.handleActionCommentChange,
+      approveStep: this.approveStep,
+      rejectStep: this.rejectStep,
+      resendStep: this.resendStep,
+    };
+  }
+}
+
+</script>
+</body>
+</html>
